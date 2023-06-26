@@ -1,0 +1,14 @@
+### SET WITH so-misp-install ###
+MISP=""
+APIKEY=""
+INTEL=""
+NIDS_RULES=""
+ENGINE=""
+
+### USED BY SCRIPTS, LEAVE ALONE PLS ###
+MISPCFG="/etc/misp/mispcfg"
+IDSTOOLS_CONF="salt/idstools/etc/rulecat.conf"
+#INTEL_PATH="/opt/so/saltstack/local/salt/zeek/policy/intel/misp-intel.dat"
+INTEL_PATH="/opt/so/saltstack/local/salt/zeek/policy/intel/intel.dat"
+RULE_PATH="/opt/so/saltstack/local/salt/idstools/misp.rules"
+LOAD_ZEEK="/opt/so/saltstack/local/salt/zeek/policy/intel/__load__.zeek"

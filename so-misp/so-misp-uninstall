@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# Check if script is being sudo'd
+if [[ ! $EUID == 0 ]]
+then
+   echo "This script must be run as root" 
+   return 0
+fi
+
+function so-misp-uninstall {
+   read -p "Are you sure you want to uninstall so-misp? All configurations and scripts will be permanently deleted. (yes/no): " confirm
+
+   # Confirm user wants to make changes
+   if [[ $confirm == "yes" ]]
+   then
+      echo "CONFIRMED!"
+   else
+      echo "Uninstall rejected. Exiting ..."
+      return 0
+   fi
+
+   # make changes
+   echo "Removing scripts from /usr/sbin/so-misp-* ..."
+   rm -f /usr/sbin/so-misp-*
+
+   echo "Removing local intel.dat config ..."
+   rm -f $INTEL_PATH
+
+   echo "Removing local __load___.zeek config ..."
+   rm -f $LOAD_ZEEK
+
+   echo "Removing downloaded NIDS rules ..."
+   rm -f $RULE_PATH
+
+   echo "Removing so-misp-download cron job ..."
+   rm -f /etc/cron.d/so-misp-download
+
+   echo "Removing /etc/mispcfg  ..."
+   rm -rf /etc/mispcfg
+
+   echo "Updating Zeek state.."
+   salt "*" state.apply zeek
+
+   echo "Updating IDSTools state ..."
+   salt "*" state.apply idstools
+
+   echo "Updating rules ..."
+   /usr/sbin/so-rule-update
+}
+
+so-misp-uninstall

@@ -1,0 +1,9 @@
+filters_rules/*.rules
+
+local_rules/*.rules
+
+strelka_localrules/*.yar
+
+zeek_intel/*.dat
+zeek_intel/*.tsv
+zeek_intel/*.csv

@@ -1,0 +1,70 @@
+#!/bin/bash
+
+# SUDO check
+if [[ ! $EUID == 0 ]]
+then
+	echo "This script should be run as root. Exiting..."
+	exit 0
+fi
+
+# Manager check
+if [[ ! $(salt-key | grep $HOSTNAME) == $(salt-key | grep _manager) ]]
+then
+	echo "This script should be run on a manager node. Exiting..."
+	exit 0
+fi
+
+so-rmnode() {
+
+	###################################
+	## Security Onion Sensor Remover ##
+	###################################
+
+	read -p "Name of the node to remove: " nodeName
+	# get ip from config file = nodeIP
+	nodeIP=$(grep node_address /opt/so/saltstack/local/pillar/minions/${nodeName}_sensor.sls | sed "s/'//g" | sed 's/  node_address: //g')
+	# Confirmation
+	read -p "$( echo -e "You are about to remove sensor $nodeName.\nConfirm? (y/n): ")" confirm
+
+	# continue if confirmed, else return 0
+	if [[ $confirm == "y" ]]
+	then 
+		clear
+		echo "Removal Confirmed."
+	else
+		echo "Confirmation rejected or invalid choice. Exiting..."
+		return 0
+
+	echo "Removing ${nodeName} ssh keys ..."
+	for i in $(ls /home)
+	do
+		#sed will not remove trailing newlines, choose a different tool (later)
+		sed -i 's/^${nodeIP}.*$//g' /home/$i/.ssh/known_hosts
+		sed -i 's/^${nodeIP}.*$//g' /root/.ssh/known_hosts
+	done
+
+	echo "Removing ${nodeName} salt key ..."
+	salt-key -d ${nodeName}_sensor
+
+	echo "Removing ${nodeName} salt configuration entries ..."
+	rm -f /opt/so/saltstack/local/pillar/minions/${nodeName}_sensor.sls
+
+	#why did i put this in?
+	#echo "Removing ${nodeName} from Grafana Dashboards ..."
+	#sed -i 's///g' /opt/so/conf/grafana/grafana_dashboards/sensor.json
+
+	echo "Removing /nsm/soc/jobs/${nodeName}/* ..."
+	rm -rf /nsm/soc/jobs/${nodeName}
+	
+	echo "Restarting Grafana ..." #apply grafana config changes
+	so-grafana-restart
+
+	echo "Restarting the SOC ..." #make web gui reflect changes
+	so-soc-restart
+
+	clear
+	echo "All done!"
+	exit 0
+}
+
+so-rmnode

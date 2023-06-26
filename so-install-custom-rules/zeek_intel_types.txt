@@ -1,0 +1,13 @@
+Intel::ADDR         An IP address.
+Intel::SUBNET       A subnet in CIDR notation.
+Intel::URL          A complete URL without the prefix "http://".
+Intel::SOFTWARE     Software name.
+Intel::EMAIL        Email address.
+Intel::DOMAIN       DNS domain name.
+Intel::USER_NAME    A user name.
+Intel::CERT_HASH    Certificate SHA-1 hash.
+Intel::PUBKEY_HASH  Public key MD5 hash, formatted as hexadecimal digits delimited by colons. (SSH server host keys are a good example.)
+
+(present if base/frameworks/intel/files.zeek is loaded)
+Intel::FILE_HASH    File hash which is non-hash type specific. It’s up to the user to query for any relevant hash types.
+Intel::FILE_NAME    File name. Typically with protocols with definite indications of a file name.
