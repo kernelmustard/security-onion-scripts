@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+
+#########################################################################
+#                                                                       #
+#    rename_pcap()                                                      #
+#                                                                       #
+#    Locate pcap with the default naming scheme in /nsm/pcap            #
+#    (epoch time) and rename them according to which sensor found it    #
+#                                                                       #
+#  ------------------  ##################################################
+#           |           #
+#  Inputs   +  PCAP_DIR  #
+#  Outputs  +  None      #
+#           |           #
+#######################
+
+function rename_pcap() {
+
+    PCAP_LIST=$(find $PCAP_DIR -maxdepth 1 -type f | grep -E '^\.\/[[:digit:]]{16}$')
+    if [[ ! -z $PCAP_LIST ]]; then
+        for i in $PCAP_LIST; do
+            mv ${PCAP_DIR}/${i} ${PCAP_DIR}/${i}_$(hostname)
+        done
+    fi
+    return 0
+}
+
+###################################################################################################
+#                                                                                                 #
+#    move_pcap()                                                                                  #
+#                                                                                                 #
+#    If storage space on /nsm/pcap reaches the set limit, move the oldest section to cold storage #
+#    on /nsm/pcap/backup using the above function to rename it before moving to shared storage.   #
+#    Note that stenographer is configured to delete pcap at 10% free disk but this can be set     #
+#    lower.                                                                                       #
+#                                                                                                 #
+#  --------------  ################################################################################
+#           |       #
+#  Inputs   +  None  #
+#  Outputs  +  None  #
+#           |       #
+###################
+
+function move_pcap() {
+    ACTUAL_USE_PERCENT=$(df -h $PCAP_DIR | awk 'FNR == 2 {print $5}' | sed 's/%//g')
+
+    while (( $ACTUAL_USE_PERCENT >= $SET_USE_PERCENT )); do
+        ls
+    done
+}
+
+##############
+#            #
+#    MAIN    #
+#            #
+##############
+
+# This script should not be run interactively, check if STDIN/STDERR attached
+if [[ -t 0 && -t 2 ]]; then
+    echo "This script should not be ran interactively!"
+    exit 1
+fi
+
+PCAP_DIR="/nsm/pcap"
+SET_USE_PERCENT=90;
+
+move_pcap
