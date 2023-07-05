@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+###################################################################################################
+#                                                                                                 #
+#    move_pcap()                                                                                  #
+#                                                                                                 #
+#  If storage space on /nsm/pcap reaches the set limit, move and rename the oldest 5 files to cold#
+#  storage on /nsm/pcap/backup. They are renamed before moving to shared storage because steno    #
+#  names pcap by epoch time.                                                                      #
+###################################################################################################
+
+function move_pcap() {
+    ACTUAL_USE_PERCENT=$(df -h $PCAP_DIR | awk 'FNR == 2 {print $5}' | sed 's/%//g')
+
+    while (( $ACTUAL_USE_PERCENT >= $SET_USE_PERCENT )); do
+        for i in $(ls -tc $PCAP_DIR | tail -n 5); do
+            mv ${PCAP_DIR}/${i} ${PCAP_DIR}/${i}_$(hostname)
+        done
+        ACTUAL_USE_PERCENT=$(df -h $PCAP_DIR | awk 'FNR == 2 {print $5}' | sed 's/%//g')
+    done
+}
+
+##############
+#            #
+#    MAIN    #
+#            #
+##############
+
+# This script should not be run interactively, check if STDIN/STDERR attached
+if [[ -t 0 && -t 2 ]]; then
+    echo "This script should not be ran interactively!"
+    exit 1
+fi
+
+PCAP_DIR="/nsm/pcap"
+SET_USE_PERCENT=85; # pcap is deleted at 90%
+
+# Stenographer is configured to delete pcap at 10% free on /nsm, which is why by default pcap is 
+# moved at 15%. That 5% is enough to prevent having to backup for upwards of a week with large hot 
+# storage, but you may have to adjust smaller to indirectly to prevent the script running too often
+# or loss in case of a surge of network traffic.
+
+move_pcap
