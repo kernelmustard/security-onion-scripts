@@ -2,7 +2,7 @@
 This was created to extend the storage capability of Security Onion sensors. 
 # Summary
 The pcap_nfs salt state performs 3 configuration changes to each salt minion enrolled as a sensor
-- push a script to `/usr/sbin-so-rotate-pcap` that checks if /nsm usage is above 85%, and copies the oldest 5 pcap files to cold storage until belowe
+- push a script to `/usr/sbin-so-rotate-pcap` that checks if /nsm usage is above 85%, and copies the oldest 5 pcap files to cold storage until below that threshold
 - create an hourly cron job to run it
 - mount the share on a specified NFS server as cold storage to copy old pcap to.
 # Installation
