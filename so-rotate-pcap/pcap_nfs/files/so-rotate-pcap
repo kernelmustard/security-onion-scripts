@@ -12,9 +12,9 @@
 function move_pcap() {
     ACTUAL_USE_PERCENT=$(df -h $PCAP_DIR | awk 'FNR == 2 {print $5}' | sed 's/%//g')
 
-    while (( $ACTUAL_USE_PERCENT >= $SET_USE_PERCENT )); do
+    while (( ACTUAL_USE_PERCENT >= SET_USE_PERCENT )); do
         for i in $(ls -tcp $PCAP_DIR | grep -v / | tail -n 5); do
-            mv ${PCAP_DIR}/${i} ${PCAP_DIR}/${i}_$(hostname)
+            mv ${PCAP_DIR}/"${i}" ${PCAP_DIR}/"${i}"_"$(hostname)"
         done
         ACTUAL_USE_PERCENT=$(df -h $PCAP_DIR | awk 'FNR == 2 {print $5}' | sed 's/%//g')
     done

@@ -65,7 +65,93 @@ sleep 5
 # Intall IDS filter rules
 ## 1. Append all rules into filters.rules
 if [[ MDENGINE == "SURICATA" ]]; then
+    cat filters_rules/* >> $NIDS_RULEDIR/sorules/filters.rules#!/usr/bin/env bash
+
+# SUDO check
+if [[ ! $EUID == 0 ]]; then
+	echo "This script should be run as root. Exiting..."
+	exit 1
+fi
+
+# Manager check
+if [[ ! $(salt-key | grep "$HOSTNAME") == $(salt-key | grep _manager) ]]; then
+	echo "This script should be run on a manager node. Exiting..."
+	exit 1
+fi
+
+# VARS
+STRELKA_RULEDIR="/opt/so/saltstack/local/salt/strelka/rules"
+ZEEKINTEL_RULEDIR="/opt/so/saltstack/local/salt/zeek/policy/intel/"
+NIDS_RULEDIR="/opt/so/saltstack/local/salt/idstools/"
+if grep "airgap: True" /opt/so/saltstack/local/pillar/global.sls &> /dev/null; then
+    AIRGAP=true
+else
+    AIRGAP=false
+fi
+if grep "mdengine: 'ZEEK'" /opt/so/saltstack/local/pillar/global.sls &>/dev/null; then 
+    MDENGINE="ZEEK"
+else 
+    MDENGINE="SURICATA"
+fi
+
+# Pre-Ex Check
+## 1. Check for rule folders used by this script
+for i in filters_rules local_rules strelka_localrules zeek_intel; do
+    if [[ ! -d $i ]]; then
+        echo "Directory $i not found! Please return this script to the so-install-custom-rules directory."
+    fi
+done
+## 2. Check for and maybe copy over Zeek intel config files
+for i in intel.dat __load__.zeek; do
+    if [[ ! -f $ZEEKINTEL_RULEDIR/$i ]]; then
+        cp /opt/so/saltstack/default/salt/zeek/policy/intel/$i $ZEEKINTEL_RULEDIR/
+    fi
+done
+## 3. Check for NIDS rule files
+for i in sorules/filters.rules local.rules; do 
+    if [[ ! -f $NIDS_RULEDIR/$i ]]; then
+        cp /opt/so/saltstack/default/salt/idstools/"$i" "$NIDS_RULEDIR"/"$i"
+     fi
+done
+
+# Install YARA rules
+## 1. Copy local YARA rules to strelka dir
+mkdir $STRELKA_RULEDIR/localrules
+cp strelka_localrules/*.yara >> $STRELKA_RULEDIR/localrules/
+## 2. If airgap == False, pull updated rules
+if ! $AIRGAP; then 
+    /usr/bin/env so-yara-update
+fi
+## 3. Restart strelka to apply new rules
+salt -G 'role:so-sensor' cmd.run "so-strelka-restart"
+sleep 5
+
+# Install Zeek Intel
+#need to figure out how it looks coming down to parse
+
+# Intall IDS filter rules
+## 1. Append all rules into filters.rules
+if [[ "$MDENGINE" == "SURICATA" ]]; then
     cat filters_rules/* >> $NIDS_RULEDIR/sorules/filters.rules
+## 2. Update Salt state
+    salt-call state.highstate
+## 3. Restart Suricata on the sensor as necessary
+    salt -G 'role:so-sensor' state.apply suricata
+    sleep 5
+fi
+
+# Install IDS local rules
+## 1. Append all rules into local.rules
+cat local_rules/* | sort -u | sed 's/^#.*$//g'| sed '/^[[:space:]]*$/d' >> $NIDS_RULEDIR/local.rules
+## 2. Update Salt state
+salt-call state.highstate
+## 3. Pull updated rules if not airgapped
+if ! $AIRGAP; then 
+    /usr/bin/env so-rule-update
+fi
+## 4. Restart Suricata on the sensor as necessary
+salt -G 'role:so-sensor' state.apply suricata
+
 ## 2. Update Salt state
     salt-call state.highstate
 ## 3. Restart Suricata on the sensor as necessary

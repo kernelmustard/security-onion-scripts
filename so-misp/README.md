@@ -36,3 +36,5 @@ Any previously configured intel files will be wiped away (bug)
 
 # TODO
 - figure out how to load custom zeek intel files
+
+NEEDS TO BE SHELLCHECKED

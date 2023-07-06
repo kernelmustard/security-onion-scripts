@@ -5,20 +5,18 @@ function so-misp-download {
 	. /etc/misp/mispcfg
 
 	# if NIDS_RULES enabled, then get NIDS rules
-	if [[ $NIDS_RULES == "yes" ]]
-	then
+	if [[ $NIDS_RULES == "yes" ]]; then
 		echo "Downloading Suricata rules ..."
-		wget -q --no-check-certificate --header="Authorization: $APIKEY"  https://$MISP/events/nids/$ENGINE/download -O $RULE_PATH
+		wget -q --no-check-certificate --header="Authorization: $APIKEY"  https://"$MISP"/events/nids/"$ENGINE"/download -O "$RULE_PATH"
 		#wget -q --no-check-certificate --header="Authorization: $APIKEY" https://$MISP/attributes/restSearch/returnFormat:$ENGINE -O $RULE_PATH
 		# another method tried for testing purposes
 		# little o???
 	fi
 
 	# if Zeek Intel enabled, then get Zeek Intel
-	if [[ $INTEL == "yes" ]]
-	then
+	if [[ $INTEL == "yes" ]]; then
 		echo "Downloading Zeek intel ..."
-    	wget -q --no-check-certificate --header="Authorization: $APIKEY"  https://$MISP/attributes/bro/download/all -O $INTEL_PATH
+    	wget -q --no-check-certificate --header="Authorization: $APIKEY"  https://"$MISP"/attributes/bro/download/all -O "$INTEL_PATH"
 	fi
 	echo "All done!"
 }
