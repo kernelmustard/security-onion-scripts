@@ -10,13 +10,14 @@ pcap_script:
     - name: /usr/sbin/so-rotate-pcap
 
 /usr/sbin/so-rotate-pcap:
-  - cron.present:
-      - identifier: pcap_nfs
-      - user: root
-      - special: '@hourly'
+  cron.present:
+    - identifier: pcap_nfs
+    - user: root
+    - special: '@hourly'
 
 create_mount_point:
-  - file.directory.name: /nsm/pcap/backup
+  file.directory
+    - name: /nsm/pcap/backup
 
 pcap_nfs:
   mount.mounted:
@@ -25,5 +26,5 @@ pcap_nfs:
     - require.file: create_mount_point
     - device: {{NFS_SERVER}}:/var/share/pcap
     - fstype: nfs
-    opts:
+    - opts:
       - defaults
