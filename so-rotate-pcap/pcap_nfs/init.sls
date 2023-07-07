@@ -1,5 +1,4 @@
 {% set NFS_SERVER = '192.168.32.131' %}
-#---
 pcap_script:
   file.managed:
     - source: salt://pcap_nfs/files/so-rotate-pcap
@@ -16,7 +15,7 @@ pcap_script:
     - special: '@hourly'
 
 create_mount_point:
-  file.directory
+  file.directory:
     - name: /nsm/pcap/backup
 
 pcap_nfs:
@@ -27,4 +26,4 @@ pcap_nfs:
     - device: {{NFS_SERVER}}:/var/share/pcap
     - fstype: nfs
     - opts:
-      - defaults
+        - defaults
