@@ -2,22 +2,73 @@
 
 ###################################################################################################
 #                                                                                                 #
+#    check_use_percent()                                                                          #
+#                                                                                                 #
+#  Check if SET_USE_PERCENT is >= ACTUAL_USE_PERCENT, and return true if it is. This invokes the  #
+#  move_pcap()/dump_steno() functions to decrease $PCAPDIR disk usage to acceptable levels.       #
+###################################################################################################
+
+function check_use_percent() {
+    SET_USE_PERCENT=$1
+    ACTUAL_USE_PERCENT=$(df -h $PCAP_DIR | awk 'FNR == 2 {print $5}' | sed 's/%//g')
+
+    if (( ACTUAL_USE_PERCENT >= SET_USE_PERCENT )); then
+        true
+    else
+        false
+    fi
+}
+
+###################################################################################################
+#                                                                                                 #
 #    move_pcap()                                                                                  #
 #                                                                                                 #
-#  If storage space on /nsm/pcap reaches the set limit, move and rename the oldest 5 files to cold#
-#  storage on /nsm/pcap/backup. They are renamed before moving to shared storage because steno    #
-#  names pcap by epoch time.                                                                      #
+#  If storage space on $PCAP_DIR reaches the set limit, dump 5 oldest files to pcap on cold       #
+#  storage and delete the steno block file and index off host storage.                            #
 ###################################################################################################
 
 function move_pcap() {
-    ACTUAL_USE_PERCENT=$(df -h $PCAP_DIR | awk 'FNR == 2 {print $5}' | sed 's/%//g')
-
-    while (( ACTUAL_USE_PERCENT >= SET_USE_PERCENT )); do
-        for i in $(ls -tcp $PCAP_DIR | grep -v / | tail -n 5); do
-            mv ${PCAP_DIR}/"${i}" ${PCAP_DIR}/"${i}"_"$(hostname)"
-        done
-        ACTUAL_USE_PERCENT=$(df -h $PCAP_DIR | awk 'FNR == 2 {print $5}' | sed 's/%//g')
+    for file in $(ls "$PCAP_DIR" | head -n 5); do
+        file_arr+=("$file")
     done
+
+    dump_steno "${file_arr[0]}" "${file_arr[4]}"
+
+    for file in "${file_arr[@]}"; do
+        rm -f "${PCAP_DIR}"/"$file"
+        rm -f "${PCAP_DIR}index"/"$file"
+    done
+}
+
+###################################################################################################
+#                                                                                                 #
+#    dump_steno()                                                                                 #
+#                                                                                                 #
+#  This is a modified version of the script written by GH user aeppert at                         #
+#  https://github.com/aeppert/shell_scripts/blob/master/dump_steno.sh . It is invoked by          #
+#  move_pcap(), and takes the oldest and 10th oldest steno block filenames as args. 
+#
+###################################################################################################
+
+function dump_steno() {
+    # Aaron Eppert - 3/6/2019
+    #
+    # Dump a range of data from Stenographer
+    #
+    # Example: dump_steno 1688054002980250 1688055148151230
+
+    #USAGE="usage: dump_steno <start timestamp in ms> <end timestamp in ms>
+
+    STENOREAD=$(/usr/bin/env stenoread)
+
+    start_query=$(date --date @"$(echo "$1" / 100000 | bc)" +'%Y-%m-%dT%H:%M:%SZ')
+    stop_query=$(date --date @"$(echo "$2" / 100000 | bc)" +'%Y-%m-%dT%H:%M:%SZ')
+
+    file_out=$(echo ${PCAP_DIR}/backup/"$1"_"$2".pcap)
+
+    $STENOREAD after "$start_query" and before "$stop_query" -w "$file_out"
+
+    # Does this cause disk thrashing? Need to test
 }
 
 ##############
@@ -35,9 +86,11 @@ fi
 PCAP_DIR="/nsm/pcap"
 SET_USE_PERCENT=85; # pcap is deleted at 90%
 
+while check_use_percent "$SET_USE_PERCENT"; do
+    move_pcap
+done
+
 # Stenographer is configured to delete pcap at 10% free on /nsm, which is why by default pcap is 
 # moved at 15%. That 5% is enough to prevent having to backup for upwards of a week with large hot 
 # storage, but you may have to adjust smaller to indirectly to prevent the script running too often
 # or loss in case of a surge of network traffic.
-
-move_pcap

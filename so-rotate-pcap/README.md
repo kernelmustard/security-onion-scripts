@@ -16,3 +16,7 @@ The pcap_nfs salt state performs 3 configuration changes to each salt minion enr
 - so-rotate-pcap assumes stenographer has the default threshold for deleting pcap (90%), but it is possible and maybe preferrable to grab that number from the local config file
 - It works in my test environment, but users should ensure their stenographer searches cold storage in addition to hot storage. It has been fickle in my experience. 
 - The `yamllint` step is optional, but it has saved me hours that I used to spend trying to chase down weird errors only to find it was a stray space. 
+- The script should include a logging utility so that a user can track down where a steno block file has gone
+- steno is not optimized to frequently extract large amounts of pcap, and it may cause disk thrashing. need to test
+# Credit
+- I incorporated https://github.com/aeppert/shell_scripts/blob/master/dump_steno.sh in the so-rotate-pcap script, go check out the repo it's sick
