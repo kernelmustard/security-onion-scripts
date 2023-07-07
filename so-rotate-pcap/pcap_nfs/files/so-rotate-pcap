@@ -46,8 +46,8 @@ function move_pcap() {
 #                                                                                                 #
 #  This is a modified version of the script written by GH user aeppert at                         #
 #  https://github.com/aeppert/shell_scripts/blob/master/dump_steno.sh . It is invoked by          #
-#  move_pcap(), and takes the oldest and 10th oldest steno block filenames as args. 
-#
+#  move_pcap(), and takes the oldest and 5th oldest steno block filenames as args.                #
+#                                                                                                 #
 ###################################################################################################
 
 function dump_steno() {
