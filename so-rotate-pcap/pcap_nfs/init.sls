@@ -1,4 +1,4 @@
-{% set NFS_SERVER = '192.168.32.131' %}
+{% set NFS_SHARE = '192.168.32.131:/var/share/pcap' %}
 pcap_script:
   file.managed:
     - source: salt://pcap_nfs/files/so-rotate-pcap
@@ -19,11 +19,13 @@ create_mount_point:
     - name: /nsm/pcap/backup
 
 pcap_nfs:
+  pkg.installed:
+    - name: nfs-utils
   mount.mounted:
     - name: /nsm/pcap/backup
     - mkmount: true
     - require.file: create_mount_point
-    - device: {{NFS_SERVER}}:/var/share/pcap
+    - device: {{NFS_SHARE}}
     - fstype: nfs
     - opts:
         - defaults
