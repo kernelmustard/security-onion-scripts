@@ -4,7 +4,7 @@ pcap_script:
     - source: salt://pcap_nfs/files/so-rotate-pcap
     - user: root
     - group: root
-    - mode: 644
+    - mode: "0644"
     - template: jinja
     - name: /usr/sbin/so-rotate-pcap
 
@@ -25,7 +25,7 @@ pcap_nfs:
     - name: /nsm/pcap/backup
     - mkmount: true
     - require.file: create_mount_point
-    - device: {{NFS_SHARE}}
+    - device: {{ NFS_SHARE }}
     - fstype: nfs
     - opts:
         - defaults
