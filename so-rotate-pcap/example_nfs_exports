@@ -1,0 +1,4 @@
+# put this file in /etc/exports.d/ on the NFS server
+/var/share/files "*"(rw,sync,no_root_squash,no_all_squash)
+/var/share/pcap "*"(rw,sync,no_root_squash,no_all_squash)
+/var/share/elasticsearch "*"(rw,sync,no_root_squash,no_all_squash)
