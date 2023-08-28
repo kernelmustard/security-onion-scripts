@@ -18,6 +18,8 @@ so-rmnode() {
 	## Security Onion Sensor Remover ##
 	###################################
 
+	echo "salt-key -L"
+	salt-key -L
 	read -rp "Name of the node to remove: " nodeName
 	# get ip from config file = nodeIP
 	nodeIP=$(grep node_address /opt/so/saltstack/local/pillar/minions/"${nodeName}"_sensor.sls | sed "s/'//g" | sed 's/  node_address: //g')
