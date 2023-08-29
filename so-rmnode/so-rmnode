@@ -20,11 +20,11 @@ so-rmnode() {
 
 	echo "salt-key -L"
 	salt-key -L
-	read -rp "Name of the node to remove: " nodeName
-	# get ip from config file = nodeIP
-	nodeIP=$(grep node_address /opt/so/saltstack/local/pillar/minions/"${nodeName}"_sensor.sls | sed "s/'//g" | sed 's/  node_address: //g')
+	read -rp "Name of the node to remove: " node_name
+	# get ip from config file = node_ip
+	node_ip=$(grep node_address /opt/so/saltstack/local/pillar/minions/"${node_name}"_sensor.sls | sed "s/'//g" | sed 's/  node_address: //g')
 	# Confirmation
-	read -rp "$( echo -e "You are about to remove sensor $nodeName.\nConfirm? (y/n): ")" confirm
+	read -rp "$( echo -e "You are about to remove sensor $node_name.\nConfirm? (y/n): ")" confirm
 
 	# continue if confirmed, else return 0
 	if [[ $confirm == "y" ]]; then 
@@ -35,25 +35,25 @@ so-rmnode() {
 		return 0
 	fi
 
-	echo "Removing ${nodeName} ssh keys ..."
+	echo "Removing ${node_name} ssh keys ..."
 	for i in /home/*; do
 		#sed will not remove trailing newlines, choose a different tool (later)
-		sed -i "s/^${nodeIP}.*$//g" /home/"${i}"/.ssh/known_hosts
-		sed -i "s/^${nodeIP}.*$//g" /root/.ssh/known_hosts
+		sed -i "s/^${node_ip}.*$//g" "${i}"/.ssh/known_hosts
 	done
+	sed -i "s/^${node_ip}.*$//g" /root/.ssh/known_hosts
 
-	echo "Removing ${nodeName} salt key ..."
-	salt-key -d "${nodeName}"_sensor
+	echo "Removing ${node_name} salt key ..."
+	salt-key -d "${node_name}"_sensor
 
-	echo "Removing ${nodeName} salt configuration entries ..."
-	rm -f /opt/so/saltstack/local/pillar/minions/"${nodeName}"_sensor.sls
+	echo "Removing ${node_name} salt configuration entries ..."
+	rm -f /opt/so/saltstack/local/pillar/minions/"${node_name}"_sensor.sls
 
 	#why did i put this in?
-	#echo "Removing ${nodeName} from Grafana Dashboards ..."
+	#echo "Removing ${node_name} from Grafana Dashboards ..."
 	#sed -i 's///g' /opt/so/conf/grafana/grafana_dashboards/sensor.json
 
-	echo "Removing /nsm/soc/jobs/${nodeName}/* ..."
-	rm -rf /nsm/soc/jobs/"${nodeName}"
+	echo "Removing /nsm/soc/jobs/${node_name}/* ..."
+	rm -rf /nsm/soc/jobs/"${node_name}"
 	
 	echo "Restarting Grafana ..." #apply grafana config changes
 	so-grafana-restart
