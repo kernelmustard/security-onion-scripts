@@ -6,7 +6,7 @@
 
 # Vars
 splunk="/opt/splunkforwarder/bin/splunk"
-forward_server="splunk.goldteam.io:9997"
+forward_server="<splunk_url>:9997"
 
 # Install
 $splunk enable boot-start
