@@ -1,0 +1,5 @@
+# Summary
+Automate deployment of Splunk Universal Forwarder on Security Onion sensor nodes
+
+# Installation
+1. Copy splunk_uf to `opt/so/saltstack/local/salt/`
