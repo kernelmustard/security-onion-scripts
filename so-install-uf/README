@@ -3,3 +3,8 @@ Automate deployment of Splunk Universal Forwarder on Security Onion sensor nodes
 
 # Installation
 1. Copy splunk_uf to `opt/so/saltstack/local/salt/`
+
+# Notes 4 L8r
+- IDEA: Find if/where "airgapped" is set in salt config, add IF block to download fresh UF RPM rather than use the one packaged with this repo
+- NEED TO TEST TOTAL PRODUCT
+- Figure out how 
