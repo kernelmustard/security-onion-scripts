@@ -75,7 +75,7 @@ fi
 
 # Install IDS local rules
 ## 1. Append all rules into local.rules
-cat $NIDS_RULEDIR/local.rules <(local_rules/* | sort -u | sed 's/^#.*$//g'| sed '/^[[:space:]]*$/d') > /tmp/local.rules
+cat $NIDS_RULEDIR/local.rules <(find local_rules/* | sort -u | sed 's/^#.*$//g'| sed '/^[[:space:]]*$/d') > /tmp/local.rules
 \mv /tmp/local.rules $NIDS_RULEDIR/local.rules
 ## 2. Update Salt state
 salt-call state.highstate
