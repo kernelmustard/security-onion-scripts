@@ -4,7 +4,7 @@ pcap_script:
     - source: salt://pcap_nfs/files/so-rotate-pcap
     - user: root
     - group: root
-    - mode: 0644
+    - mode: '0644'
     - template: jinja
     - name: /usr/sbin/so-rotate-pcap
 
