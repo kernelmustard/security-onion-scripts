@@ -15,7 +15,7 @@ then
 fi
 
 # VARS
-STRELKA_RULEDIR="/opt/so/saltstack/local/salt/strelka/rules"
+STRELKA_RULEDIR="/opt/so/saltstack/local/salt/strelka/rules/"
 ZEEKINTEL_RULEDIR="/opt/so/saltstack/local/salt/zeek/policy/intel/"
 NIDS_RULEDIR="/opt/so/saltstack/local/salt/idstools/"
 if [[ $(grep "airgap: True" /opt/so/saltstack/local/pillar/global.sls &> /dev/null) ]]; then
@@ -33,7 +33,7 @@ fi
 ## 1. Check for rule folders used by this script
 for i in filters_rules local_rules strelka_localrules zeek_intel; do
     if [[ ! -d $i ]]; then
-        echo "Directory $i not found! Please return this script to the so-install-custom-rules directory."
+        mkdir ./$i
     fi
 done
 ## 2. Check for and maybe copy over Zeek intel config files
@@ -49,7 +49,9 @@ done
 
 # Install YARA rules
 ## 1. Copy local YARA rules to strelka dir
-mkdir $STRELKA_RULEDIR/localrules
+if [[ ! -d $STRELKA_RULEDIR/localrules ]]; then
+  mkdir $STRELKA_RULEDIR/localrules
+fi
 cp strelka_localrules/*.yara >> $STRELKA_RULEDIR/localrules/
 ## 2. If airgap == False, pull updated rules
 if ! $AIRGAP; then 
