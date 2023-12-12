@@ -8,7 +8,7 @@ then
 fi
 
 # Manager check
-if [[ ! $(salt-key | grep $HOSTNAME) == $(salt-key | grep _manager) ]]
+if [[ ! $(salt-key | grep "$HOSTNAME") == $(salt-key | grep _manager) ]]
 then
 	echo "This script should be run on a manager node. Exiting..."
 	exit 1
@@ -18,7 +18,7 @@ fi
 STRELKA_RULEDIR="/opt/so/saltstack/local/salt/strelka/rules"
 ZEEKINTEL_RULEDIR="/opt/so/saltstack/local/salt/zeek/policy/intel/"
 NIDS_RULEDIR="/opt/so/saltstack/local/salt/idstools/"
-if [[ grep "airgap: True" /opt/so/saltstack/local/pillar/global.sls &> /dev/null ]]; then
+if [[ $(grep "airgap: True" /opt/so/saltstack/local/pillar/global.sls &> /dev/null) ]]; then
     AIRGAP=true
 else
     AIRGAP=false
@@ -42,10 +42,10 @@ for i in intel.dat __load__.zeek; do
         cp /opt/so/saltstack/default/salt/zeek/policy/intel/$i $ZEEKINTEL_RULEDIR/
     fi
 done
-## 3. Check for NIDS rule files
-for i in sorules/filters.rules local.rules; do 
-    if [[ ! -f $NIDS_RULEDIR/$i ]]
-done
+## 3. Check for NIDS rule files --- NO NEED
+#for i in sorules/filters.rules local.rules; do 
+#    if [[ ! -f $NIDS_RULEDIR/$i ]]
+#done
 
 # Install YARA rules
 ## 1. Copy local YARA rules to strelka dir
@@ -75,26 +75,8 @@ fi
 
 # Install IDS local rules
 ## 1. Append all rules into local.rules
-cat local_rules/* | sort -u | sed 's/^#.*$//g'| sed '/^[[:space:]]*$/d' >> $NIDS_RULEDIR/local.rules
-## 2. Update Salt state
-salt-call state.highstate
-## 3. Pull updated rules if not airgapped
-if ! $AIRGAP; then 
-    /usr/bin/env so-rule-update
-fi
-## 4. Restart Suricata on the sensor as necessary
-salt -G 'role:so-sensor' state.apply suricata
-
-## 2. Update Salt state
-    salt-call state.highstate
-## 3. Restart Suricata on the sensor as necessary
-    salt -G 'role:so-sensor' state.apply suricata
-    sleep 5
-fi
-
-# Install IDS local rules
-## 1. Append all rules into local.rules
-cat $NIDS_RULEDIR/local.rules <(local_rules/* | sort -u | sed 's/^#.*$//g'| sed '/^[[:space:]]*$/d') > $NIDS_RULEDIR/local.rules
+cat $NIDS_RULEDIR/local.rules <(local_rules/* | sort -u | sed 's/^#.*$//g'| sed '/^[[:space:]]*$/d') > /tmp/local.rules
+\mv /tmp/local.rules $NIDS_RULEDIR/local.rules
 ## 2. Update Salt state
 salt-call state.highstate
 ## 3. Pull updated rules if not airgapped
